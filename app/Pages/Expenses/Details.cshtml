@@ -85,6 +85,10 @@
                 }
                 @if (Model.Expense.StatusName == "Submitted")
                 {
+                    @*
+                        NOTE: reviewerId=2 uses seed data manager (Bob Manager, UserId=2).
+                        In production, replace with the authenticated user's ID from HttpContext.User.
+                    *@
                     <form method="post" asp-page-handler="Approve" style="display:inline">
                         <input type="hidden" name="id" value="@Model.Expense.ExpenseId" />
                         <input type="hidden" name="reviewerId" value="2" />

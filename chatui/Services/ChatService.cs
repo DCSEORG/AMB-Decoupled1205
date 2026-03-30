@@ -152,8 +152,10 @@ Amounts are stored in pence (minor units) - divide by 100 to display in pounds."
             BinaryData.FromString("""{"type":"object","properties":{}}""")),
     };
 
-    // Default reviewer ID uses seed data manager (Bob Manager, ID=2).
-    // In production, pass the authenticated user's ID.
+    // Default reviewer ID uses seed data manager (Bob Manager, UserId=2).
+    // NOTE: This is a POC/demo default only.
+    // In production, use the authenticated user's ID from the security context.
+    // Replace this with: var reviewerId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
     private const int DefaultReviewerId = 2;
 
     public ChatService(IConfiguration configuration, ILogger<ChatService> logger, IHttpClientFactory httpClientFactory)

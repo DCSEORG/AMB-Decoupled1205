@@ -122,7 +122,9 @@
         }
 
         function formatMessage(text) {
-            // Step 1: Escape HTML to prevent XSS
+            // Step 1: Escape ALL HTML entities FIRST to prevent XSS injection.
+            // This must happen before any innerHTML assignment.
+            // All user-provided content is neutralised at this point.
             let escaped = text
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
