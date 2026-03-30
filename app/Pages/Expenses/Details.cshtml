@@ -1,0 +1,108 @@
+@page "/Expenses/Details/{id:int}"
+@model ExpenseManagement.Pages.Expenses.DetailsModel
+@{
+    ViewData["Title"] = "Expense Details";
+}
+
+@if (Model.ErrorMessage != null)
+{
+    <div class="error-banner">
+        <strong>⚠️ Error:</strong> @Model.ErrorMessage
+    </div>
+}
+
+<div class="page-container">
+    <div class="page-header">
+        <h1>Expense #@Model.Expense?.ExpenseId</h1>
+        <a href="/Expenses" class="btn btn-outline">← Back to Expenses</a>
+    </div>
+
+    @if (Model.Expense != null)
+    {
+        <div class="section-card">
+            <div class="detail-header">
+                <span class="badge badge-@Model.Expense.StatusName.ToLower() badge-lg">@Model.Expense.StatusName</span>
+                <span class="detail-amount">£@Model.Expense.AmountDecimal.ToString("N2")</span>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <label>Employee</label>
+                    <span>@Model.Expense.UserName</span>
+                </div>
+                <div class="detail-item">
+                    <label>Email</label>
+                    <span>@Model.Expense.Email</span>
+                </div>
+                <div class="detail-item">
+                    <label>Category</label>
+                    <span>@Model.Expense.CategoryName</span>
+                </div>
+                <div class="detail-item">
+                    <label>Date</label>
+                    <span>@Model.Expense.ExpenseDate.ToString("dd MMMM yyyy")</span>
+                </div>
+                <div class="detail-item detail-item-full">
+                    <label>Description</label>
+                    <span>@(Model.Expense.Description ?? "-")</span>
+                </div>
+                <div class="detail-item">
+                    <label>Receipt</label>
+                    <span>@(Model.Expense.ReceiptFile ?? "No receipt")</span>
+                </div>
+                <div class="detail-item">
+                    <label>Submitted</label>
+                    <span>@(Model.Expense.SubmittedAt?.ToString("dd MMM yyyy HH:mm") ?? "-")</span>
+                </div>
+                @if (Model.Expense.ReviewedBy.HasValue)
+                {
+                    <div class="detail-item">
+                        <label>Reviewed By</label>
+                        <span>@Model.Expense.ReviewedByName</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Reviewed At</label>
+                        <span>@Model.Expense.ReviewedAt?.ToString("dd MMM yyyy HH:mm")</span>
+                    </div>
+                }
+                <div class="detail-item">
+                    <label>Created</label>
+                    <span>@Model.Expense.CreatedAt.ToString("dd MMM yyyy HH:mm")</span>
+                </div>
+            </div>
+
+            <div class="detail-actions">
+                @if (Model.Expense.StatusName == "Draft")
+                {
+                    <a href="/Expenses/Edit/@Model.Expense.ExpenseId" class="btn btn-outline">Edit</a>
+                    <form method="post" asp-page-handler="Submit" style="display:inline">
+                        <input type="hidden" name="id" value="@Model.Expense.ExpenseId" />
+                        <button type="submit" class="btn btn-primary">Submit for Approval</button>
+                    </form>
+                    <form method="post" asp-page-handler="Delete" style="display:inline" onsubmit="return confirm('Delete this expense?')">
+                        <input type="hidden" name="id" value="@Model.Expense.ExpenseId" />
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                }
+                @if (Model.Expense.StatusName == "Submitted")
+                {
+                    <form method="post" asp-page-handler="Approve" style="display:inline">
+                        <input type="hidden" name="id" value="@Model.Expense.ExpenseId" />
+                        <input type="hidden" name="reviewerId" value="2" />
+                        <button type="submit" class="btn btn-success">Approve</button>
+                    </form>
+                    <form method="post" asp-page-handler="Reject" style="display:inline">
+                        <input type="hidden" name="id" value="@Model.Expense.ExpenseId" />
+                        <input type="hidden" name="reviewerId" value="2" />
+                        <button type="submit" class="btn btn-danger">Reject</button>
+                    </form>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="section-card">
+            <p>Expense not found.</p>
+        </div>
+    }
+</div>
