@@ -64,7 +64,7 @@ graph TD
 | Resource | SKU | Region |
 |----------|-----|--------|
 | App Service Plan | S1 Standard | UK South |
-| Azure SQL Database | Basic | UK South |
-| Azure OpenAI | S0 | Sweden Central |
+| Azure SQL Database | Basic (5 DTU) | UK South |
+| Azure OpenAI | S0 Standard | Sweden Central |
 | AI Search | Basic | Sweden Central |
 | Managed Identity | N/A | UK South |

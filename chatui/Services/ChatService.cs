@@ -152,6 +152,10 @@ Amounts are stored in pence (minor units) - divide by 100 to display in pounds."
             BinaryData.FromString("""{"type":"object","properties":{}}""")),
     };
 
+    // Default reviewer ID uses seed data manager (Bob Manager, ID=2).
+    // In production, pass the authenticated user's ID.
+    private const int DefaultReviewerId = 2;
+
     public ChatService(IConfiguration configuration, ILogger<ChatService> logger, IHttpClientFactory httpClientFactory)
     {
         _settings = configuration.GetSection("GenAISettings").Get<GenAISettings>() ?? new GenAISettings();
@@ -260,9 +264,9 @@ Amounts are stored in pence (minor units) - divide by 100 to display in pounds."
                 "create_expense" => await CallApiAsync("POST", "/api/expenses", arguments),
                 "submit_expense" => await CallApiAsync("POST", $"/api/expenses/{args.GetProperty("id").GetInt32()}/submit"),
                 "approve_expense" => await CallApiAsync("POST", $"/api/expenses/{args.GetProperty("id").GetInt32()}/approve",
-                    JsonSerializer.Serialize(new { reviewedBy = args.TryGetProperty("reviewedBy", out var rb) ? rb.GetInt32() : 2 })),
+                    JsonSerializer.Serialize(new { reviewedBy = args.TryGetProperty("reviewedBy", out var rb) ? rb.GetInt32() : DefaultReviewerId })),
                 "reject_expense" => await CallApiAsync("POST", $"/api/expenses/{args.GetProperty("id").GetInt32()}/reject",
-                    JsonSerializer.Serialize(new { reviewedBy = args.TryGetProperty("reviewedBy", out var rb2) ? rb2.GetInt32() : 2 })),
+                    JsonSerializer.Serialize(new { reviewedBy = args.TryGetProperty("reviewedBy", out var rb2) ? rb2.GetInt32() : DefaultReviewerId })),
                 "delete_expense" => await CallApiAsync("DELETE", $"/api/expenses/{args.GetProperty("id").GetInt32()}"),
                 "get_users" => await CallApiAsync("GET", "/api/users"),
                 "get_categories" => await CallApiAsync("GET", "/api/categories"),

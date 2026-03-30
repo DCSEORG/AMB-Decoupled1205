@@ -376,7 +376,7 @@ public class ExpenseService : IExpenseService
             || inner.Contains("Login failed", StringComparison.OrdinalIgnoreCase);
 
         var hint = isManagedIdentityIssue
-            ? " MANAGED IDENTITY FIX: Ensure (1) the user-assigned identity 'mid-AppModAssist-30-11-30' is assigned to the App Service, " +
+            ? " MANAGED IDENTITY FIX: Ensure (1) the user-assigned identity 'mid-appmodassist-30-11-30' is assigned to the App Service, " +
               "(2) the connection string uses 'Authentication=Active Directory Managed Identity;User Id=<client-id>', " +
               "(3) the identity has been added as a database user via run-sql-dbrole.py, " +
               "(4) AZURE_CLIENT_ID app setting is configured with the identity's client ID."
@@ -384,6 +384,9 @@ public class ExpenseService : IExpenseService
 
         return $"[{method} in ExpenseService.cs] {ex.GetType().Name}: {ex.Message}{hint}";
     }
+
+    // Note: default reviewer ID 2 (Bob Manager from seed data) is used when no reviewer is specified.
+    // In production, the logged-in user's ID should be passed instead.
 
     // ─── Dummy data (shown when DB is unavailable) ─────────────────────
     private static List<Expense> GetDummyExpenses() => new()

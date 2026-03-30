@@ -77,9 +77,13 @@ echo "  Search       : $SEARCH_ENDPOINT"
 
 # Update Python scripts with the actual SQL server name
 echo "Updating Python scripts with deployment values..."
-sed -i.bak "s|sql-expensemgmt-SUFFIX.database.windows.net|$SQL_SERVER_FQDN|g" run-sql.py && rm -f run-sql.py.bak
-sed -i.bak "s|sql-expensemgmt-SUFFIX.database.windows.net|$SQL_SERVER_FQDN|g" run-sql-dbrole.py && rm -f run-sql-dbrole.py.bak
-sed -i.bak "s|sql-expensemgmt-SUFFIX.database.windows.net|$SQL_SERVER_FQDN|g" run-sql-stored-procs.py && rm -f run-sql-stored-procs.py.bak
+update_python_server() {
+    local file="$1"
+    sed -i.bak "s|sql-expensemgmt-SUFFIX.database.windows.net|$SQL_SERVER_FQDN|g" "$file" && rm -f "${file}.bak"
+}
+update_python_server run-sql.py
+update_python_server run-sql-dbrole.py
+update_python_server run-sql-stored-procs.py
 echo "  ✓ Python scripts updated"
 
 # ── Step 3: Configure App Service settings (including GenAI) ──────────────────
