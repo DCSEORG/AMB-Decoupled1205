@@ -1,0 +1,201 @@
+@page
+@model ExpenseManagementChat.Pages.IndexModel
+@{
+    ViewData["Title"] = "Expense AI Assistant";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expense AI Assistant</title>
+    <link rel="stylesheet" href="~/css/chat.css" />
+</head>
+<body>
+    <div class="chat-wrapper">
+        <div class="chat-header">
+            <div class="chat-logo">💼 ExpenseTracker AI</div>
+            <div class="chat-subtitle">Ask me about expenses, approvals, and more</div>
+            <a href="/" class="chat-back-link">← Back to App</a>
+        </div>
+
+        <div class="chat-body" id="chatBody">
+            <div class="chat-bubble assistant-bubble">
+                <div class="bubble-content">
+                    <strong>👋 Hello! I'm your Expense Management Assistant.</strong><br/>
+                    I can help you:<br/>
+                    <ul>
+                        <li>📋 <strong>View expenses</strong> – "Show me all submitted expenses"</li>
+                        <li>✅ <strong>Approve expenses</strong> – "Approve expense #2"</li>
+                        <li>➕ <strong>Create expenses</strong> – "Create a travel expense for £45 for Alice"</li>
+                        <li>📊 <strong>Get summaries</strong> – "How many expenses are pending?"</li>
+                    </ul>
+                    What would you like to do?
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-bar">
+            <div class="chat-input-wrapper">
+                <textarea
+                    id="userInput"
+                    class="chat-input"
+                    placeholder="Ask about expenses..."
+                    rows="1"
+                    onkeydown="handleKeyDown(event)"></textarea>
+                <button id="sendBtn" class="chat-send-btn" onclick="sendMessage()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"/>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="chat-hint">Press Enter to send · Shift+Enter for new line</div>
+        </div>
+    </div>
+
+    <script>
+        const chatBody = document.getElementById('chatBody');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        // Conversation history
+        const conversationHistory = [];
+
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            // Add user message to UI
+            appendBubble('user', text);
+            conversationHistory.push({ role: 'user', content: text });
+            userInput.value = '';
+            autoResize(userInput);
+
+            // Disable input while waiting
+            setInputEnabled(false);
+
+            // Show typing indicator
+            const typingId = showTyping();
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: conversationHistory })
+                });
+
+                const data = await response.json();
+                removeTyping(typingId);
+
+                const assistantContent = data.content || 'Sorry, I could not process that request.';
+                appendBubble('assistant', assistantContent);
+                conversationHistory.push({ role: 'assistant', content: assistantContent });
+            } catch (err) {
+                removeTyping(typingId);
+                appendBubble('assistant', '⚠️ **Connection error.** Please check your network and try again.', true);
+            } finally {
+                setInputEnabled(true);
+                userInput.focus();
+            }
+        }
+
+        function appendBubble(role, text, isError = false) {
+            const div = document.createElement('div');
+            div.className = `chat-bubble ${role === 'user' ? 'user-bubble' : 'assistant-bubble'}${isError ? ' error-bubble' : ''}`;
+
+            const content = document.createElement('div');
+            content.className = 'bubble-content';
+            content.innerHTML = formatMessage(text);
+            div.appendChild(content);
+
+            chatBody.appendChild(div);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function formatMessage(text) {
+            // Step 1: Escape ALL HTML entities FIRST to prevent XSS injection.
+            // This must happen before any innerHTML assignment.
+            // All user-provided content is neutralised at this point.
+            let escaped = text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+
+            // Step 2: Apply markdown-style formatting
+            // Bold: **text**
+            escaped = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+            // Code: `text`
+            escaped = escaped.replace(/`(.+?)`/g, '<code>$1</code>');
+
+            // Process lines for lists
+            const lines = escaped.split('\n');
+            const result = [];
+            let inUl = false, inOl = false;
+
+            for (const line of lines) {
+                const ulMatch = line.match(/^[-*]\s+(.+)/);
+                const olMatch = line.match(/^(\d+)\.\s+(.+)/);
+
+                if (ulMatch) {
+                    if (!inUl) { result.push('<ul>'); inUl = true; }
+                    if (inOl) { result.push('</ol>'); inOl = false; }
+                    result.push(`<li>${ulMatch[1]}</li>`);
+                } else if (olMatch) {
+                    if (!inOl) { result.push('<ol>'); inOl = true; }
+                    if (inUl) { result.push('</ul>'); inUl = false; }
+                    result.push(`<li>${olMatch[2]}</li>`);
+                } else {
+                    if (inUl) { result.push('</ul>'); inUl = false; }
+                    if (inOl) { result.push('</ol>'); inOl = false; }
+                    result.push(line === '' ? '<br/>' : line + '<br/>');
+                }
+            }
+
+            if (inUl) result.push('</ul>');
+            if (inOl) result.push('</ol>');
+
+            return result.join('');
+        }
+
+        function showTyping() {
+            const id = 'typing-' + Date.now();
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = 'chat-bubble assistant-bubble typing-bubble';
+            div.innerHTML = '<div class="bubble-content"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
+            chatBody.appendChild(div);
+            chatBody.scrollTop = chatBody.scrollHeight;
+            return id;
+        }
+
+        function removeTyping(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        function setInputEnabled(enabled) {
+            userInput.disabled = !enabled;
+            sendBtn.disabled = !enabled;
+            sendBtn.style.opacity = enabled ? '1' : '0.5';
+        }
+
+        function autoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+        }
+
+        userInput.addEventListener('input', () => autoResize(userInput));
+    </script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+@page
+@model ExpenseManagement.Pages.ExpensesModel
+@{
+    ViewData["Title"] = "Expenses";
+}
+
+@if (Model.ErrorMessage != null)
+{
+    <div class="error-banner">
+        <strong>⚠️ Database Error:</strong> @Model.ErrorMessage
+    </div>
+}
+
+<div class="page-container">
+    <div class="page-header">
+        <h1>Expenses</h1>
+        <a href="/Expenses/Create" class="btn btn-primary">+ New Expense</a>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+        <form method="get" class="filter-form">
+            <div class="filter-group">
+                <label for="statusId">Status</label>
+                <select name="statusId" id="statusId" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    @foreach (var status in Model.Statuses)
+                    {
+                        <option value="@status.StatusId" selected="@(Model.SelectedStatusId == status.StatusId ? "selected" : null)">
+                            @status.StatusName
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="userId">Employee</label>
+                <select name="userId" id="userId" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Employees</option>
+                    @foreach (var user in Model.Users)
+                    {
+                        <option value="@user.UserId" selected="@(Model.SelectedUserId == user.UserId ? "selected" : null)">
+                            @user.UserName
+                        </option>
+                    }
+                </select>
+            </div>
+            @if (Model.SelectedStatusId.HasValue || Model.SelectedUserId.HasValue)
+            {
+                <a href="/Expenses" class="btn btn-outline">Clear Filters</a>
+            }
+        </form>
+        <div class="filter-count">@Model.Expenses.Count expense(s) found</div>
+    </div>
+
+    <!-- Expenses Table -->
+    <div class="section-card">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Employee</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var expense in Model.Expenses)
+                {
+                    <tr>
+                        <td>@expense.ExpenseId</td>
+                        <td>@expense.ExpenseDate.ToString("dd MMM yyyy")</td>
+                        <td>@expense.UserName</td>
+                        <td>@expense.CategoryName</td>
+                        <td class="truncate" title="@expense.Description">@expense.Description</td>
+                        <td>£@expense.AmountDecimal.ToString("N2")</td>
+                        <td><span class="badge badge-@expense.StatusName.ToLower()">@expense.StatusName</span></td>
+                        <td>@(expense.SubmittedAt.HasValue ? expense.SubmittedAt.Value.ToString("dd MMM") : "-")</td>
+                        <td class="actions-cell">
+                            <a href="/Expenses/Details/@expense.ExpenseId" class="btn btn-sm btn-outline">View</a>
+                            @if (expense.StatusName == "Draft")
+                            {
+                                <a href="/Expenses/Edit/@expense.ExpenseId" class="btn btn-sm btn-outline">Edit</a>
+                                <form method="post" asp-page-handler="Submit" style="display:inline">
+                                    <input type="hidden" name="id" value="@expense.ExpenseId" />
+                                    <button type="submit" class="btn btn-sm btn-primary">Submit</button>
+                                </form>
+                                <form method="post" asp-page-handler="Delete" style="display:inline" onsubmit="return confirm('Delete this expense?')">
+                                    <input type="hidden" name="id" value="@expense.ExpenseId" />
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            }
+                            @if (expense.StatusName == "Submitted")
+                            {
+                                @* 
+                                    NOTE: reviewerId=2 uses seed data manager (Bob Manager, UserId=2).
+                                    In production, replace with authenticated user's ID from HttpContext.User.
+                                *@
+                                <form method="post" asp-page-handler="Approve" style="display:inline">
+                                    <input type="hidden" name="id" value="@expense.ExpenseId" />
+                                    <input type="hidden" name="reviewerId" value="2" />
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
+                                <form method="post" asp-page-handler="Reject" style="display:inline">
+                                    <input type="hidden" name="id" value="@expense.ExpenseId" />
+                                    <input type="hidden" name="reviewerId" value="2" />
+                                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Expenses.Any())
+                {
+                    <tr>
+                        <td colspan="9" class="empty-message">No expenses found. <a href="/Expenses/Create">Add one?</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

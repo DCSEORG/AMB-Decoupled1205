@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Expense Management</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <span class="brand-icon">💼</span>
+            <span>ExpenseTracker</span>
+        </div>
+        <ul class="navbar-nav">
+            <li><a href="/Index" class="nav-link">Dashboard</a></li>
+            <li><a href="/Expenses" class="nav-link">All Expenses</a></li>
+            <li><a href="/Expenses/Create" class="nav-link">Add Expense</a></li>
+            <li><a href="/swagger" class="nav-link" target="_blank">API Docs</a></li>
+            <li><a href="/chatui" class="nav-link">💬 Chat</a></li>
+        </ul>
+    </nav>
+
+    @RenderBody()
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

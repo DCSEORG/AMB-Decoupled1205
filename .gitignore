@@ -1,0 +1,23 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+publish/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# NOTE: .zip files are intentionally NOT excluded
+# app.zip is committed to the repo for use in deployment scripts
+
+# Azure
+.azure/

@@ -15,3 +15,33 @@ Steps to modernise an app:
 
 Supporting slides for Microsoft Employees:
 [Here](<https://microsofteur-my.sharepoint.com/:p:/g/personal/dchisholm_microsoft_com/IQAY41LQ12fjSIfFz3ha4hfFAZc7JQQuWaOrF7ObgxRK6f4?e=p6arJs>)
+
+---
+
+## What was built (by GitHub Copilot)
+
+This modernisation created the following:
+
+| Component | Details |
+|-----------|---------|
+| **Infra** | `infra/main.bicep`, `app-service.bicep`, `azure-sql.bicep`, `genai.bicep` |
+| **App** | ASP.NET Core Razor Pages (.NET 8), REST APIs with Swagger |
+| **Chat UI** | Azure OpenAI GPT-4o function calling chat interface |
+| **SQL** | Stored procedures for all CRUD, managed identity auth |
+| **Scripts** | `deploy.sh` and `deploy-with-chat.sh` for full deployment |
+
+### Quick start:
+```bash
+# Set your Entra ID details
+export ADMIN_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv)
+export ADMIN_LOGIN=$(az ad signed-in-user show --query userPrincipalName -o tsv)
+
+# Deploy (without GenAI):
+bash deploy.sh
+
+# Deploy (with GenAI chat):
+bash deploy-with-chat.sh
+```
+
+> 📌 After deployment, navigate to `<app-url>/Index` (not just the root URL)
+> 📖 API docs available at `<app-url>/swagger`
