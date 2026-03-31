@@ -70,7 +70,12 @@ OPENAI_ENDPOINT=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.openAIEndpoint.value')
 OPENAI_MODEL_NAME=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.openAIModelName.value')
 SEARCH_ENDPOINT=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.searchEndpoint.value')
 
+# Chat App Service outputs
+CHAT_APP_SERVICE_NAME=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.chatAppServiceName.value')
+CHAT_APP_SERVICE_URL=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.chatAppServiceUrl.value')
+
 echo "  App Service  : $APP_SERVICE_NAME"
+echo "  Chat App     : $CHAT_APP_SERVICE_NAME"
 echo "  SQL Server   : $SQL_SERVER_FQDN"
 echo "  OpenAI       : $OPENAI_ENDPOINT"
 echo "  Search       : $SEARCH_ENDPOINT"
@@ -177,11 +182,51 @@ echo "  ✓ App deployed"
 # ── Step 10: Build and deploy Chat UI ─────────────────────────────────────────
 echo "Step 10: Building and deploying Chat UI..."
 
-# For Chat UI - deploy as part of the main app (under /chatui path)
-# or as a separate app service. Here we integrate it into the main app.
-# The chat UI is accessed via the main app's /chatui route.
-echo "  ℹ️  Chat UI is served via the main App Service at $APP_SERVICE_URL/chatui"
-echo "  ✓ Chat UI configuration complete"
+cd chatui
+dotnet restore
+dotnet publish -c Release -o ./publish
+cd publish
+zip -r ../../chat.zip . -x "*.pdb"
+cd ../..
+
+az webapp deploy \
+    --resource-group "$RESOURCE_GROUP" \
+    --name "$CHAT_APP_SERVICE_NAME" \
+    --src-path ./chat.zip \
+    --type zip \
+    --output none
+
+# Clean up build artifacts
+rm -rf chatui/publish chat.zip
+
+echo "  ✓ Chat UI deployed to $CHAT_APP_SERVICE_NAME"
+
+# ── Step 11: Configure Chat UI App Service settings ───────────────────────────
+echo "Step 11: Configuring Chat UI App Service settings..."
+az webapp config appsettings set \
+    --resource-group "$RESOURCE_GROUP" \
+    --name "$CHAT_APP_SERVICE_NAME" \
+    --settings \
+        "GenAISettings__OpenAIEndpoint=$OPENAI_ENDPOINT" \
+        "GenAISettings__OpenAIModelName=$OPENAI_MODEL_NAME" \
+        "GenAISettings__SearchEndpoint=$SEARCH_ENDPOINT" \
+        "GenAISettings__ManagedIdentityClientId=$MI_CLIENT_ID" \
+        "ExpenseApiUrl=$APP_SERVICE_URL" \
+        "MainAppUrl=$APP_SERVICE_URL" \
+        "AZURE_CLIENT_ID=$MI_CLIENT_ID" \
+        "ManagedIdentityClientId=$MI_CLIENT_ID" \
+        "ASPNETCORE_ENVIRONMENT=Production" \
+    --output none
+echo "  ✓ Chat UI settings configured"
+
+# ── Step 12: Update main app with Chat UI URL ─────────────────────────────────
+echo "Step 12: Updating main app with Chat UI URL..."
+az webapp config appsettings set \
+    --resource-group "$RESOURCE_GROUP" \
+    --name "$APP_SERVICE_NAME" \
+    --settings "ChatUIUrl=$CHAT_APP_SERVICE_URL" \
+    --output none
+echo "  ✓ Main app ChatUIUrl updated to $CHAT_APP_SERVICE_URL"
 
 # ── Complete ──────────────────────────────────────────────────────────────────
 echo ""
@@ -190,7 +235,7 @@ echo " Full Deployment Complete! (with Chat AI)"
 echo "==========================================="
 echo ""
 echo "  🌐 App URL    : $APP_SERVICE_URL/Index"
-echo "  💬 Chat URL   : $APP_SERVICE_URL/chatui"
+echo "  💬 Chat URL   : $CHAT_APP_SERVICE_URL"
 echo "  📖 API Docs   : $APP_SERVICE_URL/swagger"
 echo "  🤖 OpenAI     : $OPENAI_ENDPOINT"
 echo "  🔍 AI Search  : $SEARCH_ENDPOINT"

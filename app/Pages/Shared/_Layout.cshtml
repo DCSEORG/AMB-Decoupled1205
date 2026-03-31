@@ -1,3 +1,4 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,7 +18,14 @@
             <li><a href="/Expenses" class="nav-link">All Expenses</a></li>
             <li><a href="/Expenses/Create" class="nav-link">Add Expense</a></li>
             <li><a href="/swagger" class="nav-link" target="_blank">API Docs</a></li>
-            <li><a href="/chatui" class="nav-link">💬 Chat</a></li>
+            @if (!string.IsNullOrEmpty(Configuration["ChatUIUrl"]))
+            {
+                <li><a href="@Configuration["ChatUIUrl"]" class="nav-link" target="_blank">💬 Chat</a></li>
+            }
+            else
+            {
+                <li><a href="/chatui" class="nav-link">💬 Chat</a></li>
+            }
         </ul>
     </nav>
 

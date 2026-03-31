@@ -1,5 +1,6 @@
 @page
 @model ExpenseManagementChat.Pages.IndexModel
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     ViewData["Title"] = "Expense AI Assistant";
     Layout = null;
@@ -17,7 +18,7 @@
         <div class="chat-header">
             <div class="chat-logo">💼 ExpenseTracker AI</div>
             <div class="chat-subtitle">Ask me about expenses, approvals, and more</div>
-            <a href="/" class="chat-back-link">← Back to App</a>
+            <a href="@(Configuration["MainAppUrl"] ?? "/")" class="chat-back-link">← Back to App</a>
         </div>
 
         <div class="chat-body" id="chatBody">
