@@ -14,7 +14,7 @@ param managedIdentityId string
 param managedIdentityClientId string
 
 @description('Location for web resources (Chat App Service) - uksouth for App Service compliance')
-param ukLocation string = 'uksouth'
+param webAppLocation string = 'uksouth'
 
 // Azure OpenAI - always swedencentral, lowercase name required
 resource openAI 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
@@ -87,7 +87,7 @@ resource searchIndexReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-
 // App Service Plan for Chat UI (uksouth - general compute region)
 resource chatAppServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   name: 'asp-chat-expensemgmt-${toLower(nameSuffix)}'
-  location: ukLocation
+  location: webAppLocation
   sku: {
     name: 'S1'
     tier: 'Standard'
@@ -100,7 +100,7 @@ resource chatAppServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
 // Chat UI App Service
 resource chatAppService 'Microsoft.Web/sites@2022-09-01' = {
   name: 'app-chat-expensemgmt-${toLower(nameSuffix)}'
-  location: ukLocation
+  location: webAppLocation
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {

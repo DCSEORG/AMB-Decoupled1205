@@ -43,7 +43,7 @@ module genAI 'genai.bicep' = if (deployGenAI) {
     managedIdentityPrincipalId: appService.outputs.managedIdentityPrincipalId
     managedIdentityId: appService.outputs.managedIdentityId
     managedIdentityClientId: appService.outputs.managedIdentityClientId
-    ukLocation: location
+    webAppLocation: location
   }
 }
 
