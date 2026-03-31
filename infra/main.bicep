@@ -41,6 +41,9 @@ module genAI 'genai.bicep' = if (deployGenAI) {
   params: {
     nameSuffix: nameSuffix
     managedIdentityPrincipalId: appService.outputs.managedIdentityPrincipalId
+    managedIdentityId: appService.outputs.managedIdentityId
+    managedIdentityClientId: appService.outputs.managedIdentityClientId
+    ukLocation: location
   }
 }
 
@@ -60,3 +63,5 @@ output openAIEndpoint string = deployGenAI ? genAI.outputs.openAIEndpoint : ''
 output openAIModelName string = deployGenAI ? genAI.outputs.openAIModelName : ''
 output openAIName string = deployGenAI ? genAI.outputs.openAIName : ''
 output searchEndpoint string = deployGenAI ? genAI.outputs.searchEndpoint : ''
+output chatAppServiceName string = deployGenAI ? genAI.outputs.chatAppServiceName : ''
+output chatAppServiceUrl string = deployGenAI ? genAI.outputs.chatAppServiceUrl : ''

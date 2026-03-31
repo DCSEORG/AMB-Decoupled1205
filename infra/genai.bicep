@@ -7,6 +7,15 @@ param nameSuffix string = uniqueString(resourceGroup().id)
 @description('Principal ID of the managed identity to assign roles to')
 param managedIdentityPrincipalId string
 
+@description('Resource ID of the managed identity to assign to the Chat App Service')
+param managedIdentityId string
+
+@description('Client ID of the managed identity for the Chat App Service')
+param managedIdentityClientId string
+
+@description('Location for web resources (Chat App Service) - uksouth for App Service compliance')
+param ukLocation string = 'uksouth'
+
 // Azure OpenAI - always swedencentral, lowercase name required
 resource openAI 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   name: 'aoai-expensemgmt-${toLower(nameSuffix)}'
@@ -75,9 +84,58 @@ resource searchIndexReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-
   }
 }
 
+// App Service Plan for Chat UI (uksouth - general compute region)
+resource chatAppServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
+  name: 'asp-chat-expensemgmt-${toLower(nameSuffix)}'
+  location: ukLocation
+  sku: {
+    name: 'S1'
+    tier: 'Standard'
+  }
+  properties: {
+    reserved: false
+  }
+}
+
+// Chat UI App Service
+resource chatAppService 'Microsoft.Web/sites@2023-01-01' = {
+  name: 'app-chat-expensemgmt-${toLower(nameSuffix)}'
+  location: ukLocation
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentityId}': {}
+    }
+  }
+  properties: {
+    serverFarmId: chatAppServicePlan.id
+    httpsOnly: true
+    siteConfig: {
+      netFrameworkVersion: 'v8.0'
+      alwaysOn: true
+      appSettings: [
+        {
+          name: 'ASPNETCORE_ENVIRONMENT'
+          value: 'Production'
+        }
+        {
+          name: 'AZURE_CLIENT_ID'
+          value: managedIdentityClientId
+        }
+        {
+          name: 'ManagedIdentityClientId'
+          value: managedIdentityClientId
+        }
+      ]
+    }
+  }
+}
+
 // Outputs
 output openAIEndpoint string = openAI.properties.endpoint
 output openAIModelName string = gpt4oDeployment.name
 output openAIName string = openAI.name
 output searchEndpoint string = 'https://${aiSearch.name}.search.windows.net'
 output searchName string = aiSearch.name
+output chatAppServiceName string = chatAppService.name
+output chatAppServiceUrl string = 'https://${chatAppService.properties.defaultHostName}'
