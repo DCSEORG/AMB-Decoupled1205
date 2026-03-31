@@ -85,7 +85,7 @@ resource searchIndexReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-
 }
 
 // App Service Plan for Chat UI (uksouth - general compute region)
-resource chatAppServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
+resource chatAppServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   name: 'asp-chat-expensemgmt-${toLower(nameSuffix)}'
   location: ukLocation
   sku: {
@@ -98,7 +98,7 @@ resource chatAppServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
 }
 
 // Chat UI App Service
-resource chatAppService 'Microsoft.Web/sites@2023-01-01' = {
+resource chatAppService 'Microsoft.Web/sites@2022-09-01' = {
   name: 'app-chat-expensemgmt-${toLower(nameSuffix)}'
   location: ukLocation
   identity: {
